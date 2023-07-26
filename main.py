@@ -1,6 +1,7 @@
 from flask import Flask, jsonify, request
 from flask_mysqldb import MySQL
 import csv
+from http import HTTPStatus
 
 app = Flask(__name__)
 
@@ -70,6 +71,10 @@ def criar_contato():
         # Se conecta ao banco de dados MySQL e cria o cursor
         cursor = mysql.connection.cursor()
 
+        # Valida se o nome está vazio
+        if data['Nome'] == "":
+            return jsonify({"Mensagem: ": "Dados inválidos"}), HTTPStatus.BAD_REQUEST
+
         # Cria um novo contato
         criar_contato_query = f"""INSERT INTO contato (
 Nome,Sobrenome,Email,Telefone) VALUES ("{data['Nome']}", "{data['Sobrenome']}", "{data['Email']}","{data['Telefone']}")"""
@@ -84,7 +89,7 @@ Nome,Sobrenome,Email,Telefone) VALUES ("{data['Nome']}", "{data['Sobrenome']}", 
         return jsonify({"mensagem": f"Contato criado com sucesso com o id {novo_id}!"})
 
     except Exception as e:
-        return jsonify({"Ocorreu um erro: ": str(e)}), 500
+        return jsonify({"Ocorreu um erro: ": str(e)}), HTTPStatus.INTERNAL_SERVER_ERROR
 
     finally:
         # Feche o cursor, se ele foi criado
@@ -107,7 +112,7 @@ def ler_contato(contato_id):
         contato = cursor.fetchone()
 
         if not contato:
-            return jsonify({"mensagem": "Contato não encontrado."}), 404
+            return jsonify({"mensagem": "Contato não encontrado."}), HTTPStatus.NOT_FOUND
 
         # Converta o resultado em um json para facilitar o entendimento após a chamada da rota
         contato_dict = {
@@ -119,7 +124,7 @@ def ler_contato(contato_id):
         }
         return jsonify(contato_dict)
     except Exception as e:
-        return jsonify({"Ocorreu um erro: ": str(e)}), 500
+        return jsonify({"Ocorreu um erro: ": str(e)}), HTTPStatus.INTERNAL_SERVER_ERROR
     finally:
         # Feche o cursor, se ele foi criado
         if cursor:
@@ -145,7 +150,7 @@ def atualizar_contato(contato_id):
 
         return jsonify({"mensagem": "Contato atualizado com sucesso!"})
     except Exception as e:
-        return jsonify({"Ocorreu um erro: ": str(e)}), 500
+        return jsonify({"Ocorreu um erro: ": str(e)}), HTTPStatus.INTERNAL_SERVER_ERROR
     finally:
         # Feche o cursor, se ele foi criado
         if cursor:
@@ -168,7 +173,7 @@ def deletar_contato(contato_id):
 
         return jsonify({"mensagem": "Contato deletado com sucesso!"})
     except Exception as e:
-        return jsonify({"Ocorreu um erro: ": str(e)}), 500
+        return jsonify({"Ocorreu um erro: ": str(e)}), HTTPStatus.INTERNAL_SERVER_ERROR
     finally:
         # Feche o cursor, se ele foi criado
         if cursor:
@@ -207,7 +212,7 @@ def buscar_contato():
         return jsonify(contatos_encontrados)
 
     except Exception as e:
-        return jsonify({"Ocorreu um erro: ": str(e)}), 500
+        return jsonify({"Ocorreu um erro: ": str(e)}), HTTPStatus.INTERNAL_SERVER_ERROR
     finally:
         # Feche o cursor, se ele foi criado
         if cursor:
